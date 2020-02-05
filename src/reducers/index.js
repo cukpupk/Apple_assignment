@@ -1,36 +1,41 @@
-import { ADD_MOVIE, REMOVE_MOVIE, RECEIVE_DATA } from '../actions/ActionTypes';
+import { produce } from "immer";
+const initialState = {
+  loading: false,
+  list: [],
+  recommendations: [],
+  err: null
+};
+const reducer = (state = initialState, action) => {
+  switch (action.type) {
+    case "FETCH_DATA_SUCCESS":
+      return {
+        list: action.data[0].mylist,
+        recommendations: action.data[0].recommendations
+      };
+    case "REMOVE_ITEM_FROM_LIST":
+      return produce(state, draft => {
+        draft.recommendations.push(draft.list[action.id]);
+        draft.list.splice(action.id, 1);
+      });
+    case "ADD_ITEM_TO_LIST":
+      return produce(state, draft => {
+        draft.list.push(draft.recommendations[action.id]);
+        draft.recommendations.splice(action.id, 1);
+      });
+    case "FETCH_DATA_START":
+      return {
+        loading: true
+      };
+    case "FETCH_DATA_FAIL":
+      return {
+        loading: false,
+        err: "cannot get data"
+      };
+    default:
+      return state;
+  }
+};
 
-const defaultState = {
-    mylist: [],
-    recommendations: []
-}
+export default reducer;
 
-const Movie = (state = defaultState, action) => {
-    switch (action.type) {
-
-        case RECEIVE_DATA:
-            return action.data;
-
-        case ADD_MOVIE:
-            const itemIds = state.recommendations.map(item => item.id);
-            const index = itemIds.indexOf(action.movie.id);
-            return {
-                ...state,
-                mylist: [...state.mylist,
-                ...state.recommendations.splice(index, 1)]
-            }
-        case REMOVE_MOVIE:
-            // Use movie as the action payload
-            const itemIds1 = state.mylist.map(item => item.id)
-            const index1 = itemIds1.indexOf(action.movie.id);
-            return {
-                ...state,
-                recommendations: [...state.recommendations,
-                ...state.mylist.splice(index1, 1)]
-            }
-        default:
-            return state;
-    }
-}
-
-export default Movie
+//export default useImmerReducer(reducer, []);
